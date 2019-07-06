@@ -10,7 +10,7 @@
         <script>
 
 var interaction = {
-    "text": "HYPERSPACE PONY EXPRESS: DON'T THINK ABOUT DEATH EDITION\n\nNavigate the hyperstream with your hyperpony!\n\nW Move Pony Up\nS Move Pony Down\nA Gold Phase\nD Sky Phase",
+    "text": "HYPERSPACE PONY EXPRESS: DON'T THINK ABOUT DEATH EDITION\n\nNavigate the hyperstream with your hyperpony!\n\nW Move Pony Up\nS Move Pony Down\nA Hold for Sky Phase\nD Hold for Gold Phase",
     "options": ["Start"]
 };
 
@@ -22,19 +22,19 @@ var stories = [
     options: ["Continue"]
 },
 {
-    text: "AT THE BANK\n\n\"You have some savings now. You should consider investing into one of our stock portfolios.\"\n\n\"It's a good long-term plan.\"",
+    text: "AT THE BANK\n\n\"You have some savings now. Long-term you should consider investing into one of our stock portfolios.\"",
     options: ["\"Do you have anything that takes climate change into account?\""],
     next: {
-        text: "\"We have the special Social Responsibility Eco Plus portfolio, which...\"",
+        text: "AT THE BANK\n\n\"We have the special Social Responsibility Eco Plus portfolio, which...\"",
         options: ["\"No, I more meant something that avoids investing into low-lying land areas.\""],
         next: {
-            text: "\"???\"",
+            text: "AT THE BANK\n\n\"???\"",
             options: ["\"Basically, something that acknowledges existential threats?\""],
             next: {
-                text: "\"???\"",
+                text: "AT THE BANK\n\n\"???\"",
                 options: ["\"I want to take a short position on human civilization.\""],
                 next: {
-                    text: "\"???\"",
+                    text: "AT THE BANK\n\n\"???\"",
                     options: ["\"The... social responsibility thingy will do. Thank you.\""],
                 }
             }
@@ -46,18 +46,18 @@ var stories = [
     options: [
         "\"Climate change is a hoax to take away our daily steak dinners! Plus, it's only gonna kill brown people.\"",
         "\"We'll make the occasional noise about the environment, as long as it doesn't threaten profits in any way.\"",
-        "\"Climate change? Sure, page 57 of our manifesto. Which we'll re-triangulate tomorrow because our voters keep leaving.\"",
-        "\"Let's shut down all nuclear power stations. That'll help!\"",
+        "\"Climate change? Page 57 of our manifesto. Which we'll re-triangulate tomorrow because our voters keep leaving.\"",
+        "\"Let's shut down all nuclear power stations so we end up going back to coal. That'll help!\"",
     ]
 },
 {
     text: "AT THE THERAPIST\n\n\"How have you been?\"",
     options: ["\"Well, I've been pretty anxious about politics, and I..."],
     next: {
-        text: "The therapist starts going on about George W Bush.",
+        text: "AT THE THERAPIST\n\nThe therapist starts going on about George W Bush.",
         options: ["\"Actually, I more meant...\""],
         next: {
-            text: "The therapist spends the rest of the session complaining about politics a decade out of date.",
+            text: "AT THE THERAPIST\n\nThe therapist spends the rest of the session complaining about politics a decade out of date.",
             options: ["\"Well, same time next month?\""]
         }
     }
@@ -66,16 +66,20 @@ var stories = [
     text: "WITH FRIENDS\n\n\"And after that, I'll be flying back to Sydney via Honolulu.\"",
     options: ["Mentally tally CO2 emissions"],
     next: {
-        text: "\"But it's only a short stop, because I have to be in New York for another conference.\"",
+        text: "WITH FRIENDS\n\n\"But it's only a short stop, because I have to be in New York for another conference.\"",
         options: ["Mentally tally CO2 emissions"],
         next: {
-            text: "\"And then back to Singapore later that month.\"",
-            options: ["Keep my mouth shut because we're in Bangkok and I, too, took an intercontinental flight here."],
+            text: "WITH FRIENDS\n\n\"And then back to Singapore later that month.\"",
+            options: ["Keep my mouth shut because we're in Bangkok and I, too, took an intercontinental flight here"],
         }
     }
 },
 {
-    text: "It's not that society around me doesn't believe climate change is happening, it's just compartmentalized. It seems\nimpolite to bring it up in everyday contexts, but at the same time it's so overwhelming it doesn't bear thinking about.\n\nThe focus on individual actions is a lie that's been fed to us to make us powerless. We can't save ourselves by\nindividually choosing to recycle or something. This needs collective action, but how is that going to happen when it\ndoesn't bear thinking about by yourself? When you're expected to only bring it up in specific places, not at the bank,\nat the therapist, in the coffee shop?\n\nI don't think that this little game will magically give you a path to meaningful action - but maybe, you feel like this\ntoo, torn between paralysis and the desire to go out and smash something before it's too late.\n\nYou're not alone. Know that at least.",
+    text: "Maybe we're just fed on the wrong stories. Individual heroes fixing the world, which does not work. We can't really\nconceive of another way to fix things.",
+    options: ["So maybe it's OK if I make games and stories if they're the right ones? Or is that a cop-out?"]
+},
+{
+    text: "It's not that society around me doesn't believe climate change is happening, it's just compartmentalized. It seems\nimpolite to bring it up in everyday contexts, but at the same time it's so overwhelming it doesn't bear thinking about.\n\nThe focus on individual actions is a lie that's been fed to us to make us powerless. We can't save ourselves by\nindividually choosing to recycle or something. This needs collective action, but how is that going to happen when it\ndoesn't bear thinking about by yourself? When you're expected to only bring it up in specific places, not at the bank,\nat the therapist, at the coffee shop?\n\nI don't think that this little game will magically give you a path to meaningful action - but maybe, you feel like this\ntoo, torn between paralysis and the desire to go out and smash something before it's too late.\n\nYou're not alone. Know that at least.",
     options: [
         "Finish",
     ]
@@ -112,7 +116,7 @@ function spawnBlackStreak() {
     var colors = ["rgba(0, 0, 0, 0.5", "white", "black"];
     blackStreak = {
         y: Math.random(),
-        h: 0.03 + Math.random() * 0.06,
+        h: 0.07 + Math.random() * 0.02,
         color: BLACK,
         colors: colors,
         values: [],
@@ -180,10 +184,19 @@ var ponyR = 255; var ponyG = 255; var ponyB = 255;
 var ponyColor = WHITE;
 var whiteoutAmount = 0;
 
+var backStreakValues = [];
+var backStreakTime = 0;
+
 function tick(ms) {
     const w = canvas.width;
     const h = canvas.height;
     c.resetTransform();
+    
+    if (backStreakValues.length == 0) {
+        for (var i = 0; i < numValues + 2; i++) {
+            backStreakValues.push((0.6 + Math.random() * 0.15));
+        }
+    }
 
     if (whiteoutAmount >= 1) {
         c.fillStyle = "white";
@@ -228,6 +241,7 @@ function tick(ms) {
     
     time += ms;
     storyTime += ms;
+    backStreakTime += ms;
     
     if (storyTime >= storyInterval && !blackStreak && storyIndex < stories.length) {
         spawnBlackStreak();
@@ -242,6 +256,32 @@ function tick(ms) {
     
     c.fillRect(0, 0, w, h);
     
+    c.fillStyle = "rgb(" + (fr * 3 / 4 + 20) + ", " + (fg * 3 / 4 + 20) + ", " + (fb * 3 / 4 + 20) + ")";
+    
+    c.beginPath();
+    var streakX = w * ((numValues + 2.0) / numValues - backStreakTime / 1000.0 * speed);
+    c.moveTo(streakX, h * sY);
+    for (var i = backStreakValues.length - 1; i >= 0; i--) {
+        streakX -= w * 1.0 / numValues;
+        c.lineTo(streakX, h * 0.5 + backStreakValues[i] * h * 0.5);
+    }
+    streakX -= w * 1.0 / numValues;
+    c.lineTo(streakX, h * sY);
+    for (var i = 0; i < backStreakValues.length; i++) {
+        streakX += w * 1.0 / numValues;
+        c.lineTo(streakX, h * 0.5 - backStreakValues[i] * h * 0.5);
+    }
+    c.closePath();
+    c.fill();
+    
+    if (backStreakTime > 1000 / numValues / speed) {
+        backStreakTime -= 1000 / numValues / speed;
+        if (backStreakValues.length > numValues + 1) {
+            backStreakValues.splice(0, 1);
+        }
+        backStreakValues.push((Math.random() * 0.15 + 0.6));
+    }
+    
     var ponyJitter = 0;
     
     for (s of streaks) {
@@ -252,9 +292,9 @@ function tick(ms) {
         
         if (s.color == BLACK) {
             if (s.y > ponyY + 0.02) {
-                s.y -= ms * 0.0005;
+                s.y -= ms * 0.00005;
             } else if (s.y < ponyY - 0.02) {
-                s.y += ms * 0.0005;
+                s.y += ms * 0.00005;
             } else if (s.values.length >= numValues && !interaction) {
                 interaction = stories[storyIndex++];
             }
@@ -312,7 +352,7 @@ function tick(ms) {
         return s.age < s.lifespan;
     });
     
-    var expectedNumberOfStreaks = Math.floor(3 + time / 10000);
+    var expectedNumberOfStreaks = Math.floor(3 + time / 5000);
     if ((whiteoutAmount > 0 || (streaks.length < expectedNumberOfStreaks) && Math.random() < 0.001 * ms)) {
         spawnStreak();
     }
@@ -372,6 +412,11 @@ function tick(ms) {
             }
             c.fillText("[" + hotkey + "] " + l, w * 0.05, w * 0.05 + li++ * 0.03 * w);
         }
+    } else {
+        var help = "W: Move Pony Up, S: Move Pony Down, A: Sky Phase, D: Gold Phase";
+        c.fillStyle = "white";
+        c.font = "3vmin sans-serif";
+        c.fillText(help, w * 0.05, h - w * 0.03);
     }
     
     if (whiteoutAmount > 0) {
