@@ -191,6 +191,17 @@ var whiteoutAmount = 0;
 var backStreakValues = [];
 var backStreakTime = 0;
 
+var bolts = [];
+
+function addBolt() {
+    bolts.push({
+        x: 1.1,
+        y: Math.random(),
+        dx: -0.003,
+        size: 1 + Math.random()
+    });
+}
+
 function tick(ms) {
     const w = canvas.width;
     const h = canvas.height;
@@ -285,6 +296,27 @@ function tick(ms) {
         }
         backStreakValues.push((Math.random() * 0.15 + 0.6));
     }
+    
+    if ((whiteoutAmount > 0 || Math.random() < 0.003 * ms)) {
+        addBolt();
+    }
+
+    c.fillStyle = "white";
+    
+    for (b of bolts) {
+        b.x += b.dx * ms;
+        c.beginPath();
+        c.moveTo(w * b.x, h * b.y);
+        c.lineTo(w * b.x - w * 0.12, h * b.y + h * 0.01);
+        c.lineTo(w * b.x - w * 0.14, h * b.y);
+        c.lineTo(w * b.x - w * 0.12, h * b.y - h * 0.01);
+        c.closePath();
+        c.fill();
+    }
+    
+    bolts = bolts.filter(function(b) {
+        return b.x > -0.2;
+    });
     
     var ponyJitter = 0;
     var ponyFeed = 0;
