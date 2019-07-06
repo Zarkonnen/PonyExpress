@@ -27,11 +27,78 @@ streaks.push({
     time: 0
 });
 
+var ponyTriangles = [];
+
+ponyTriangles.push({
+    angle: 0,
+    minRadius: 0.04,
+    maxRadius: 0.06,
+    radiusFrequency: 0.007,
+    radiusPhase: 918,
+    angularSpeed: 0.01,
+    minOpacity: 0.5,
+    maxOpacity: 0.7,
+    opacityFrequency: 0.03,
+    opacityPhase: 666,
+    points: [0, Math.PI * 2 / 3, Math.PI * 2 / 3 * 2]
+});
+
+ponyTriangles.push({
+    angle: 78,
+    minRadius: 0.03,
+    maxRadius: 0.06,
+    radiusFrequency: 0.0027,
+    radiusPhase: 401,
+    angularSpeed: -0.005,
+    minOpacity: 0.5,
+    maxOpacity: 0.7,
+    opacityFrequency: 0.01,
+    opacityPhase: 48,
+    points: [0, Math.PI * 2 / 5, Math.PI * 2 / 5 * 2, Math.PI * 2 / 5 * 3, Math.PI * 2 / 5 * 4]
+});
+
+ponyTriangles.push({
+    angle: 901,
+    minRadius: 0.04,
+    maxRadius: 0.05,
+    radiusFrequency: 0.009,
+    radiusPhase: 22,
+    angularSpeed: 0.001,
+    minOpacity: 0.2,
+    maxOpacity: 0.4,
+    opacityFrequency: 0.002,
+    opacityPhase: 123,
+    points: [0, Math.PI * 2 / 7, Math.PI * 2 / 7 * 2, Math.PI * 2 / 7 * 3, Math.PI * 2 / 7 * 4, Math.PI * 2 / 7 * 5, Math.PI * 2 / 7 * 6]
+});
+
 const numValues = 20;
 const speed = 1.5;
+const ponyX = 0.2;
+var ponyY = 0.5;
 var time = 0;
+var ponyR = 255; var ponyG = 255; var ponyB = 255;
 
 function tick(ms) {
+    if (pressed("W")) {
+        ponyY = Math.max(0.1, ponyY - ms * 0.001);
+    }
+    if (pressed("S")) {
+        ponyY = Math.min(0.9, ponyY + ms * 0.001);
+    }
+    if (pressed("D")) {
+        ponyR = 249;
+        ponyG = 188;
+        ponyB = 16;
+    } else if (pressed("A")) {
+        ponyR = 0;
+        ponyG = 172;
+        ponyB = 175;
+    } else {
+        ponyR = 255;
+        ponyG = 255;
+        ponyB = 255;
+    }
+
     const w = canvas.width;
     const h = canvas.height;
     c.resetTransform();
@@ -44,7 +111,6 @@ function tick(ms) {
     
     c.fillStyle = "rgb(" + fr + ", " + fg + ", " + fb + ")";
     
-    console.log(c.fillStyle);
     c.fillRect(0, 0, w, h);
     
     for (s of streaks) {
@@ -77,6 +143,34 @@ function tick(ms) {
             streakHDiv++;
         }
     }
+    
+    for (t of ponyTriangles) {
+        t.angle += t.angularSpeed * ms;
+        var tOpacity = t.minOpacity + (t.maxOpacity - t.minOpacity) * (Math.sin(time * t.opacityFrequency + t.opacityPhase) + 0.5);
+        var tRadius = t.minRadius + (t.maxRadius - t.minRadius) * (Math.sin(time * t.radiusFrequency + t.radiusPhase) + 0.5);
+        c.fillStyle = "rgba(" + ponyR + ", " + ponyG + ", " + ponyB + ", " + tOpacity + ")";
+        c.beginPath();
+        var started = false;
+        for (p of t.points) {
+            var pAngle = t.angle + p;
+            var pX = ponyX * w + Math.cos(pAngle) * tRadius * w;
+            var pY = ponyY * h + Math.sin(pAngle) * tRadius * w;
+            if (started) {
+                c.lineTo(pX, pY);
+            } else {
+                c.moveTo(pX, pY);
+                started = true;
+            }
+        }
+        c.closePath();
+        c.fill();
+        for (p of t.points) {
+            var pAngle = t.angle + p;
+            var pX = ponyX * w + Math.cos(pAngle) * tRadius * w;
+            var pY = ponyY * h + Math.sin(pAngle) * tRadius * w;
+            img("eye", pX, pY, w / tRadius * 0.001 / 256);
+        }
+    }
 }
 
 
@@ -86,13 +180,13 @@ function hwl(name, volume) {
 
 var images = {};
 
-function img(img, x, y) {
+function img(img, x, y, scale) {
     if (img == null) { return; }
     if (!images[img]) {
         images[img] = new Image();
         images[img].src = "graphics/" + img + ".png";
     }
-    c.drawImage(img, x, y);
+    c.drawImage(images[img], x - images[img].width * scale / 2, y - images[img].height * scale / 2, images[img].width * scale, images[img].height * scale);
 }
 
 var canvas = document.getElementById("gameCanvas");
@@ -104,16 +198,22 @@ var mouseDown = false;
 var cursor = {x: 300, y: 300};
 
 // Listen for key presses.
-function canvasKeyUp(e) {
+function canvasKeyDown(e) {
     keyCodes[e.which] = true;
     keys[String.fromCharCode(e.which)] = true;
+}
+
+
+function canvasKeyUp(e) {
+    keyCodes[e.which] = false;
+    keys[String.fromCharCode(e.which)] = false;
 }
 
 function pressed(key) {
     return !!keys[key] || !!keyCodes[key];
 }
 
-$('body').keyup(canvasKeyUp);
+$('body').keyup(canvasKeyUp).keydown(canvasKeyDown);
 
 // Listen for mouse stuff.
 function canvasClick(e) {
@@ -141,8 +241,6 @@ var lastUpdate = new Date().getTime();
 function nextFrame() {
     var currentTime = new Date().getTime();
     tick(currentTime - lastUpdate);
-    keys = {};
-    keyCodes = {};
     click = null;
     lastUpdate = currentTime;
     requestAnimationFrame(nextFrame);
