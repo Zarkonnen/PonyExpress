@@ -11,21 +11,30 @@
 
 var streaks = [];
 
-streaks.push({
-    y: 0.3,
-    h: 0.05,
-    colors: ["rgba(249, 188, 16, 0.5", "#f9bc10", "white"],
-    values: [],
-    time: 0
-});
+const WHITE = -1;
+const YELLOW = 0;
+const BLUE = 1;
+const BLACK = 2;
 
-streaks.push({
-    y: 0.5,
-    h: 0.06,
-    colors: ["rgba(0, 172, 175, 0.5", "#00acaf", "white"],
-    values: [],
-    time: 0
-});
+function spawnStreak() {
+    var color = Math.random() > 0.5 ? BLUE : YELLOW;
+    var colors = [["rgba(249, 188, 16, 0.5", "#f9bc10", "white"], ["rgba(0, 172, 175, 0.5", "#00acaf", "white"]][color];
+    streaks.push({
+        startY: Math.random(),
+        endY: Math.random(),
+        h: 0.03 + Math.random() * 0.06,
+        color: color,
+        colors: colors,
+        values: [],
+        time: 0,
+        age: 0,
+        lifespan: 3000 + Math.random() * 20000
+    });
+}
+
+spawnStreak();
+spawnStreak();
+spawnStreak();
 
 var ponyTriangles = [];
 
@@ -77,6 +86,7 @@ const ponyX = 0.2;
 var ponyY = 0.5;
 var time = 0;
 var ponyR = 255; var ponyG = 255; var ponyB = 255;
+var ponyColor = WHITE;
 
 function tick(ms) {
     if (pressed("W")) {
@@ -89,14 +99,17 @@ function tick(ms) {
         ponyR = 249;
         ponyG = 188;
         ponyB = 16;
+        ponyColor = YELLOW;
     } else if (pressed("A")) {
         ponyR = 0;
         ponyG = 172;
         ponyB = 175;
+        ponyColor = BLUE;
     } else {
         ponyR = 255;
         ponyG = 255;
         ponyB = 255;
+        ponyColor = WHITE;
     }
 
     const w = canvas.width;
@@ -113,8 +126,13 @@ function tick(ms) {
     
     c.fillRect(0, 0, w, h);
     
+    var ponyJitter = 0;
+    
     for (s of streaks) {
         s.time += ms;
+        s.age += ms;
+        var sY = s.startY + (s.endY - s.startY) * s.age / s.lifespan;
+        
         if (s.time > 1000 / numValues / speed) {
             s.time -= 1000 / numValues / speed;
             if (s.values.length > numValues + 1) {
@@ -123,25 +141,46 @@ function tick(ms) {
             s.values.push((Math.random() * 0.5 + 0.5) * s.h);
         }
         var streakHDiv = 1;
+        if (s.age > s.lifespan - 1000) {
+            streakHDiv += (1000 - s.lifespan + s.age) / 100;
+        }
+        
+        var streakH = s.h / streakHDiv;
+        
+        if (s.values.length >= numValues && Math.abs(ponyY - sY) < streakH + 0.1) {
+            if (ponyColor != s.color) {
+                ponyJitter++;
+            }
+        }
+        
         for (color of s.colors) {
             c.fillStyle = color;
             c.beginPath();
             var streakX = w * ((numValues + 2.0) / numValues - s.time / 1000.0 * speed);
-            c.moveTo(streakX, h * s.y);
+            c.moveTo(streakX, h * sY);
             for (var i = s.values.length - 1; i >= 0; i--) {
                 streakX -= w * 1.0 / numValues;
-                c.lineTo(streakX, h * (s.y + s.values[i] / streakHDiv));
+                c.lineTo(streakX, h * (sY + s.values[i] / streakHDiv));
             }
             streakX -= w * 1.0 / numValues;
-            c.lineTo(streakX, h * s.y);
+            c.lineTo(streakX, h * sY);
             for (var i = 0; i < s.values.length; i++) {
                 streakX += w * 1.0 / numValues;
-                c.lineTo(streakX, h * (s.y - s.values[i] / streakHDiv));
+                c.lineTo(streakX, h * (sY - s.values[i] / streakHDiv));
             }
             c.closePath();
             c.fill();
             streakHDiv++;
         }
+    }
+    
+    streaks = streaks.filter(function(s) {
+        return s.age < s.lifespan;
+    });
+    
+    var expectedNumberOfStreaks = Math.floor(3 + time / 10000);
+    if (streaks.length < expectedNumberOfStreaks && Math.random() < 0.001 * ms) {
+        spawnStreak();
     }
     
     for (t of ponyTriangles) {
@@ -153,8 +192,8 @@ function tick(ms) {
         var started = false;
         for (p of t.points) {
             var pAngle = t.angle + p;
-            var pX = ponyX * w + Math.cos(pAngle) * tRadius * w;
-            var pY = ponyY * h + Math.sin(pAngle) * tRadius * w;
+            var pX = ponyX * w + Math.cos(pAngle) * tRadius * w + (Math.random() - 0.5) * ponyJitter * w * 0.03;
+            var pY = ponyY * h + Math.sin(pAngle) * tRadius * w + (Math.random() - 0.5) * ponyJitter * w * 0.03;
             if (started) {
                 c.lineTo(pX, pY);
             } else {
