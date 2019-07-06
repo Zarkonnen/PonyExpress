@@ -9,6 +9,11 @@
         <canvas width="800" height="600" allowfullscreen="true" id="gameCanvas" style="margin-left: 10px; margin-top: 10px;"></canvas>
         <script>
 
+var interaction = {
+    "text": "HYPERSPACE PONY EXPRESS: DON'T THINK ABOUT DEATH EDITION\n\nW Move Pony Up\nS Move Pony Down\nA Gold Phase\nD Sky Phase",
+    "options": ["Start"]
+};
+
 var streaks = [];
 
 const WHITE = -1;
@@ -89,27 +94,31 @@ var ponyR = 255; var ponyG = 255; var ponyB = 255;
 var ponyColor = WHITE;
 
 function tick(ms) {
-    if (pressed("W")) {
-        ponyY = Math.max(0.1, ponyY - ms * 0.001);
-    }
-    if (pressed("S")) {
-        ponyY = Math.min(0.9, ponyY + ms * 0.001);
-    }
-    if (pressed("D")) {
-        ponyR = 249;
-        ponyG = 188;
-        ponyB = 16;
-        ponyColor = YELLOW;
-    } else if (pressed("A")) {
-        ponyR = 0;
-        ponyG = 172;
-        ponyB = 175;
-        ponyColor = BLUE;
+    if (interaction) {
+        ms = 0;    
     } else {
-        ponyR = 255;
-        ponyG = 255;
-        ponyB = 255;
-        ponyColor = WHITE;
+        if (pressed("W")) {
+            ponyY = Math.max(0.1, ponyY - ms * 0.001);
+        }
+        if (pressed("S")) {
+            ponyY = Math.min(0.9, ponyY + ms * 0.001);
+        }
+        if (pressed("D")) {
+            ponyR = 249;
+            ponyG = 188;
+            ponyB = 16;
+            ponyColor = YELLOW;
+        } else if (pressed("A")) {
+            ponyR = 0;
+            ponyG = 172;
+            ponyB = 175;
+            ponyColor = BLUE;
+        } else {
+            ponyR = 255;
+            ponyG = 255;
+            ponyB = 255;
+            ponyColor = WHITE;
+        }
     }
 
     const w = canvas.width;
@@ -208,6 +217,31 @@ function tick(ms) {
             var pX = ponyX * w + Math.cos(pAngle) * tRadius * w;
             var pY = ponyY * h + Math.sin(pAngle) * tRadius * w;
             img("eye", pX, pY, w / tRadius * 0.001 / 256);
+        }
+    }
+    
+    if (interaction) {
+        c.fillStyle = "rgba(0, 0, 0, 0.7)";
+        c.fillRect(0, 0, w, h);
+        c.fillStyle = "white";
+        c.font = "4vmin sans-serif";
+        var li = 0;
+        for (l of interaction.text.split("\n")) {
+            c.fillText(l, w * 0.1, w * 0.1 + li++ * 0.03 * w);
+        }
+        li++;
+        
+        c.fillStyle = "#f9bc10";
+        var oi = 0;
+        for (l of interaction.options) {
+            var hotkey = ["W", "S", "A", "D"][oi];
+            if (pressed(hotkey)) {
+                keyCodes[hotkey] = false;
+                keys[hotkey] = false;
+                interaction = interaction.next;
+                return;
+            }
+            c.fillText("[" + hotkey + "] " + l, w * 0.1, w * 0.1 + li++ * 0.03 * w);
         }
     }
 }
