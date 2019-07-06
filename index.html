@@ -9,14 +9,79 @@
         <canvas width="800" height="600" allowfullscreen="true" id="gameCanvas" style="margin-left: 10px; margin-top: 10px;"></canvas>
         <script>
 
-function hwl(name, volume) {
-    return new Howl({src: ["sounds/" + name + ".ogg", "sounds/" + name + ".mp3", "sounds/" + name + ".wav"], volume: volume || 1});
-}
+var streaks = [];
+
+streaks.push({
+    y: 0.3,
+    h: 0.05,
+    colors: ["rgba(249, 188, 16, 0.5", "#f9bc10", "white"],
+    values: [],
+    time: 0
+});
+
+streaks.push({
+    y: 0.5,
+    h: 0.06,
+    colors: ["rgba(0, 172, 175, 0.5", "#00acaf", "white"],
+    values: [],
+    time: 0
+});
+
+const numValues = 20;
+const speed = 1.5;
+var time = 0;
 
 function tick(ms) {
+    const w = canvas.width;
+    const h = canvas.height;
     c.resetTransform();
-    c.fillStyle = "black";
-    c.fillRect(0, 0, canvas.width, canvas.height);
+    
+    time += ms;
+    
+    var fr = Math.floor(249 * (Math.sin(time * 0.001) * 0.5 + 0.25) / 2);
+    var fg = Math.floor(188 * (Math.sin(time * 0.001) * 0.5 + 0.25) / 2 + 172 * (Math.cos(time * 0.002) * 0.5 + 0.25) / 2);
+    var fb = Math.floor(16 * (Math.sin(time * 0.001) * 0.5 + 0.25) / 2 + 175 * (Math.cos(time * 0.002) * 0.5 + 0.25) / 2);
+    
+    c.fillStyle = "rgb(" + fr + ", " + fg + ", " + fb + ")";
+    
+    console.log(c.fillStyle);
+    c.fillRect(0, 0, w, h);
+    
+    for (s of streaks) {
+        s.time += ms;
+        if (s.time > 1000 / numValues / speed) {
+            s.time -= 1000 / numValues / speed;
+            if (s.values.length > numValues + 1) {
+                s.values.splice(0, 1);
+            }
+            s.values.push((Math.random() * 0.5 + 0.5) * s.h);
+        }
+        var streakHDiv = 1;
+        for (color of s.colors) {
+            c.fillStyle = color;
+            c.beginPath();
+            var streakX = w * ((numValues + 2.0) / numValues - s.time / 1000.0 * speed);
+            c.moveTo(streakX, h * s.y);
+            for (var i = s.values.length - 1; i >= 0; i--) {
+                streakX -= w * 1.0 / numValues;
+                c.lineTo(streakX, h * (s.y + s.values[i] / streakHDiv));
+            }
+            streakX -= w * 1.0 / numValues;
+            c.lineTo(streakX, h * s.y);
+            for (var i = 0; i < s.values.length; i++) {
+                streakX += w * 1.0 / numValues;
+                c.lineTo(streakX, h * (s.y - s.values[i] / streakHDiv));
+            }
+            c.closePath();
+            c.fill();
+            streakHDiv++;
+        }
+    }
+}
+
+
+function hwl(name, volume) {
+    return new Howl({src: ["sounds/" + name + ".ogg", "sounds/" + name + ".mp3", "sounds/" + name + ".wav"], volume: volume || 1});
 }
 
 var images = {};
