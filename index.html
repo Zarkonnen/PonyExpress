@@ -392,6 +392,25 @@ function tick(ms) {
         ponyFeed = 0;
     }
     
+    rushing.volume(Math.min(0.7, 0.2 + ponyJitter * 0.2));
+    tremolo.volume(Math.min(0.3, blackStreak ? blackStreak.age * 0.0003 : 0));
+    rushing.rate(ponyFeed ? 1.3 : 1);
+    
+    if (interaction) {
+        rushing.volume(0.03);
+        rushing.rate(1);
+        tremolo.volume(0);
+        loop.volume(0);   
+    } else {
+        loop.volume(0.2);
+    }
+    
+    if (whiteoutAmount > 1) {
+        rushing.volume(0);
+        tremolo.volume(0);
+        loop.volume(0);    
+    }
+    
     streaks = streaks.filter(function(s) {
         return s.age < s.lifespan;
     });
@@ -436,7 +455,7 @@ function tick(ms) {
         c.fillStyle = "rgba(0, 0, 0, 0.85)";
         c.fillRect(0, 0, w, h);
         c.fillStyle = "white";
-        c.font = "3vmin sans-serif";
+        c.font = "1.4vw sans-serif";
         var li = 0;
         for (l of interaction.text.split("\n")) {
             c.fillText(l, w * 0.05, w * 0.05 + li++ * 0.03 * w);
@@ -474,8 +493,16 @@ function tick(ms) {
 
 
 function hwl(name, volume) {
-    return new Howl({src: ["sounds/" + name + ".ogg", "sounds/" + name + ".mp3", "sounds/" + name + ".wav"], volume: volume || 1});
+    return new Howl({src: ["sounds/" + name + ".ogg"], volume: volume || 1, loop: true});
 }
+
+var rushing = hwl("rushing", 0.2);
+var loop = hwl("loop", 0.3);
+var tremolo = hwl("tremolo", 0.3);
+
+loop.play();
+rushing.play();
+tremolo.play();
 
 var images = {};
 
